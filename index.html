@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <title>YouBike 臺大校區地圖</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <style>
+    body, html {
+      margin: 0;
+      height: 100%;
+      font-family: sans-serif;
+    }
+    #map {
+      width: 100%;
+      height: 100%;
+    }
+  </style>
+</head>
+<body>
+  <div id="map"></div>
+
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script>
+    const extraStations = new Set([
+      "500101181","500101022","500106003","500101021","500106135",
+      "500106002","500101023","500106001","500106090","500101184",
+      "500101010","500101009","500101008","500101040","500101216",
+      "500101041","500101008","500101014","500106012","500106011",
+      "500101207","500106007","500101104","500101012","500101016"
+    ]);
+
+    let map = L.map('map').setView([25.011, 121.535], 16); // NTU center
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    let markers = [];
+
+    function timeAgo(dateStr) {
+      const now = new Date();
+      const past = new Date(dateStr);
+      const diffMs = now - past;
+      const diffSec = Math.floor(diffMs / 1000);
+      const diffMin = Math.floor(diffSec / 60);
+      const diffHour = Math.floor(diffMin / 60);
+
+      if (diffSec < 60) return `${diffSec} 秒前`;
+      if (diffMin < 60) return `${diffMin} 分鐘前`;
+      if (diffHour < 24) return `${diffHour} 小時前`;
+      const diffDay = Math.floor(diffHour / 24);
+      return `${diffDay} 天前`;
+    }
+
+    function getMarkerColor(st) {
+      if (st.available_rent_bikes === 0) return "orange"; // no bikes
+      if (st.available_return_bikes === 0) return "red";  // no parking
+      return "green";                                    // normal
+    }
+
+    function createCircleMarker(lat, lng, color) {
+      return L.circleMarker([lat, lng], {
+        radius: 10,
+        fillColor: color,
+        color: "#333",
+        weight: 1,
+        opacity: 1,
+        fillOpacity: 0.8
+      });
+    }
+
+    async function loadStations() {
+      const url = "https://tcgbusfs.blob.core.windows.net/dotapp/youbike/v2/youbike_immediate.json";
+      try {
+        const res = await fetch(url);
+        const data = await res.json();
+        const selectedStations = data.filter(st =>
+          st.sarea === "臺大公館校區" || extraStations.has(st.sno)
+        );
+
+        // Clear old markers
+        markers.forEach(m => map.removeLayer(m));
+        markers = [];
+
+        let bounds = [];
+
+        selectedStations.forEach(st => {
+          const displayName = st.sna.replace("YouBike2.0_", "");
+          const relativeTime = timeAgo(st.srcUpdateTime);
+
+          const color = getMarkerColor(st);
+          const marker = createCircleMarker(st.latitude, st.longitude, color)
+            .bindPopup(`<b>${displayName}</b><br>
+              可借：${st.available_rent_bikes} | 可還：${st.available_return_bikes}<br>
+              更新：${relativeTime}`);
+          marker.addTo(map);
+          markers.push(marker);
+
+          bounds.push([st.latitude, st.longitude]);
+        });
+
+        if (bounds.length) {
+          map.fitBounds(bounds, { padding: [20, 20] });
+        }
+      } catch (err) {
+        alert("讀取失敗 😢");
+        console.error(err);
+      }
+    }
+
+    loadStations();
+    setInterval(loadStations, 60 * 1000); // 每分鐘更新
+  </script>
+</body>
+</html>
