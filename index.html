@@ -46,7 +46,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 14px;
+      font-size: 18px;
       font-weight: bold;
       color: white;
       border: 2px solid #333;
@@ -78,7 +78,7 @@
     ]);
 
     let mode = "borrow"; // default mode
-    let map = L.map('map').setView([25.011, 121.535], 16);
+    let map = L.map('map').setView([25.018, 121.537], 16);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '&copy; OpenStreetMap contributors'
     }).addTo(map);
@@ -198,10 +198,10 @@
     // Hook up events after control is added
     setTimeout(() => {
       document.getElementById("schoolBtn").onclick = () => {
-        map.setView([25.011, 121.535], 16); // NTU campus
+        map.setView([25.018, 121.537], 16); // NTU campus
       };
       document.getElementById("homeBtn").onclick = () => {
-        map.setView([25.00290883787547, 121.45428178671068], 16); // Home
+        map.setView([25.002, 121.454], 16); // Home
       };
     }, 500);
   </script>
