@@ -40,8 +40,8 @@
     }
     /* Custom marker style */
     .marker {
-      width: 28px;
-      height: 28px;
+      width: 35px;
+      height: 35px;
       border-radius: 50%;
       display: flex;
       align-items: center;
@@ -112,8 +112,8 @@
       if (value === 0) color = "red";
       else if (value <= 5) color = "orange";
 
-      // No number if red
-      const text = value === 0 ? "" : value;
+      // Only show number if value is between 1-5 (orange markers)
+      const text = (value >= 1 && value <= 5) ? value : "";
 
       return L.divIcon({
         className: "custom-marker",
